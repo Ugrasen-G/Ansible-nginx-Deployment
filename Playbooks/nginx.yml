@@ -1,1 +1,9 @@
 # main playbook
+
+---
+- name: Deploy Nginx on Azure VM
+  hosts: nginx
+  become: true
+
+  roles:
+    - nginx

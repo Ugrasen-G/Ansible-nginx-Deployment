@@ -1,4 +1,4 @@
-name: Deploy Nginx with configuration Ansible
+name: Deploy Nginx to Azure VM
 
 on:
   workflow_dispatch:
@@ -9,50 +9,74 @@ jobs:
 
     steps:
 
+      # 1. Checkout repo
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      # 2. Azure login
+      - name: Azure Login
+        uses: azure/login@v2
         with:
-          python-version: "3.x"
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # 3. Install Ansible temporarily
       - name: Install Ansible
         run: |
           python -m pip install --upgrade pip
           pip install ansible
 
+      # 4. Get Azure VM Public IP
       - name: Get VM IP
         id: vm
         run: |
-          # Cloud CLI/API se IP niklegi
-          VM_IP="YOUR_VM_IP"
 
-          echo "VM_IP=$VM_IP"
+          VM_IP=$(az vm show \
+            --show-details \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ secrets.AZURE_VM_NAME }}" \
+            --query publicIps \
+            --output tsv)
+
+          echo "VM IP: $VM_IP"
+
           echo "ip=$VM_IP" >> "$GITHUB_OUTPUT"
 
-      - name: Create inventory
+      # 5. Create dynamic Ansible inventory
+      - name: Create Inventory
         run: |
+
           cat > inventory/prod/hosts.ini <<EOF
+
           [nginx]
           nginx-vm ansible_host=${{ steps.vm.outputs.ip }}
 
           [nginx:vars]
-          ansible_user=ubuntu
+          ansible_user=${{ secrets.AZURE_VM_USER }}
+          ansible_ssh_private_key_file=~/.ssh/azure_vm_key
+
           EOF
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          cat inventory/prod/hosts.ini
 
+      # 6. Configure SSH
+      - name: Configure SSH
+        run: |
+
+          mkdir -p ~/.ssh
+
+          echo "${{ secrets.AZURE_VM_SSH_KEY }}" \
+            > ~/.ssh/azure_vm_key
+
+          chmod 600 ~/.ssh/azure_vm_key
+
+      # 7. Test connection
       - name: Ansible Ping
         run: |
           ansible nginx \
             -i inventory/prod/hosts.ini \
             -m ping
 
+      # 8. Deploy Nginx
       - name: Deploy Nginx
         run: |
           ansible-playbook \

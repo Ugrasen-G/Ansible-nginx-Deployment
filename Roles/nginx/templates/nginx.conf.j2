@@ -1,1 +1,17 @@
 # Nginx config
+
+events {}
+
+http {
+
+    server {
+
+        listen 80;
+
+        server_name _;
+
+        location / {
+            return 200 "Hello from Azure VM - Nginx deployed by Ansible\n";
+        }
+    }
+}
