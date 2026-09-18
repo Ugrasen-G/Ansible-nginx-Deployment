@@ -3,9 +3,14 @@ name: Deploy Nginx to Azure VM
 on:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read    
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
 
     steps:
 
@@ -17,7 +22,9 @@ jobs:
       - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+           client-id: ${{ secrets.AZURE_CLIENT_ID }}
+           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       # 3. Install Ansible temporarily
       - name: Install Ansible

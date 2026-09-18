@@ -1,90 +1,90 @@
-name: Deploy Nginx to Azure VMs
+# name: Deploy Nginx to Azure VMs
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-  workflow_dispatch:
+#   workflow_dispatch:
 
-jobs:
+# jobs:
 
-  deploy:
+#   deploy:
 
-    runs-on: ubuntu-latest
+#     runs-on: ubuntu-latest
 
-    steps:
+#     steps:
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-
-      - name: Install Ansible
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install ansible
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
 
 
-      - name: Setup SSH key
-        run: |
-
-          mkdir -p ~/.ssh
-
-          printf '%s\n' "${{ secrets.AZURE_SSH_PRIVATE_KEY }}" \
-            > ~/.ssh/ansible-nginx-deployment
-
-          chmod 600 ~/.ssh/ansible-nginx-deployment
+#       - name: Install Ansible
+#         run: |
+#           python3 -m pip install --upgrade pip
+#           pip install ansible
 
 
-      - name: Generate Ansible inventory
-        run: |
+#       - name: Setup SSH key
+#         run: |
 
-          cat > ansible/inventory/hosts.ini <<EOF
+#           mkdir -p ~/.ssh
 
-          [nginx_servers]
+#           printf '%s\n' "${{ secrets.AZURE_SSH_PRIVATE_KEY }}" \
+#             > ~/.ssh/ansible-nginx-deployment
 
-          web01 ansible_host=${{ secrets.VM1_IP }}
-
-          web02 ansible_host=${{ secrets.VM2_IP }}
-
-          web03 ansible_host=${{ secrets.VM3_IP }}
+#           chmod 600 ~/.ssh/ansible-nginx-deployment
 
 
-          [nginx_servers:vars]
+#       - name: Generate Ansible inventory
+#         run: |
 
-          ansible_user=${{ secrets.ANSIBLE_USER }}
+#           cat > ansible/inventory/hosts.ini <<EOF
 
-          ansible_python_interpreter=/usr/bin/python3
+#           [nginx_servers]
 
-          EOF
+#           web01 ansible_host=${{ secrets.VM1_IP }}
 
+#           web02 ansible_host=${{ secrets.VM2_IP }}
 
-      - name: Add hosts to known_hosts
-        run: |
-
-          ssh-keyscan -H "${{ secrets.VM1_IP }}" \
-            >> ~/.ssh/known_hosts
-
-          ssh-keyscan -H "${{ secrets.VM2_IP }}" \
-            >> ~/.ssh/known_hosts
-
-          ssh-keyscan -H "${{ secrets.VM3_IP }}" \
-            >> ~/.ssh/known_hosts
+#           web03 ansible_host=${{ secrets.VM3_IP }}
 
 
-      - name: Test connectivity
-        run: |
+#           [nginx_servers:vars]
 
-          ansible nginx_servers \
-            -i ansible/inventory/hosts.ini \
-            -m ping \
-            --private-key ~/.ssh/ansible-nginx-deployment
+#           ansible_user=${{ secrets.ANSIBLE_USER }}
+
+#           ansible_python_interpreter=/usr/bin/python3
+
+#           EOF
 
 
-      - name: Deploy Nginx
-        run: |
+#       - name: Add hosts to known_hosts
+#         run: |
 
-          ansible-playbook \
-            -i ansible/inventory/hosts.ini \
-            ansible/playbooks/nginx.yml \
-            --private-key ~/.ssh/ansible-nginx-deployment
+#           ssh-keyscan -H "${{ secrets.VM1_IP }}" \
+#             >> ~/.ssh/known_hosts
+
+#           ssh-keyscan -H "${{ secrets.VM2_IP }}" \
+#             >> ~/.ssh/known_hosts
+
+#           ssh-keyscan -H "${{ secrets.VM3_IP }}" \
+#             >> ~/.ssh/known_hosts
+
+
+#       - name: Test connectivity
+#         run: |
+
+#           ansible nginx_servers \
+#             -i ansible/inventory/hosts.ini \
+#             -m ping \
+#             --private-key ~/.ssh/ansible-nginx-deployment
+
+
+#       - name: Deploy Nginx
+#         run: |
+
+#           ansible-playbook \
+#             -i ansible/inventory/hosts.ini \
+#             ansible/playbooks/nginx.yml \
+#             --private-key ~/.ssh/ansible-nginx-deployment
