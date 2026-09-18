@@ -70,7 +70,7 @@ jobs:
       - name: Create Inventory
         run: |
 
-          cat > inventory/prod/hosts.ini <<EOF
+          cat > inventory/dev/hosts.ini <<EOF
 
           [nginx]
           nginx-vm ansible_host=${{ steps.vm.outputs.ip }}
