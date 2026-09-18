@@ -41,10 +41,24 @@ jobs:
         id: vm
         run: |
 
-          VM_IP=$(az vm show \
+          # VM_IP=$(az vm show \
+          #   --show-details \
+          #   --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+          #   --name "${{ secrets.AZURE_VM_NAME }}" \
+          #   --query publicIps \
+          #   --output tsv)
+
+            VM1_IP=$(az vm show \
             --show-details \
-            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
-            --name "${{ secrets.AZURE_VM_NAME }}" \
+            --resource-group "kp2" \
+            --name "frontend-vm1" \
+            --query publicIps \
+            --output tsv)
+
+            VM2_IP=$(az vm show \
+            --show-details \
+            --resource-group "kp2" \
+            --name "frontend-vm2" \
             --query publicIps \
             --output tsv)
 
