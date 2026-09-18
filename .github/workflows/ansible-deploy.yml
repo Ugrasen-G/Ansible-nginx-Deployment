@@ -81,7 +81,7 @@ jobs:
 
           EOF
 
-          cat inventory/prod/hosts.ini
+          cat inventory/dev/hosts.ini
 
       # 6. Configure SSH
       - name: Configure SSH
@@ -98,12 +98,12 @@ jobs:
       - name: Ansible Ping
         run: |
           ansible nginx \
-            -i inventory/prod/hosts.ini \
+            -i inventory/dev/hosts.ini \
             -m ping
 
       # 8. Deploy Nginx
       - name: Deploy Nginx
         run: |
           ansible-playbook \
-            -i inventory/prod/hosts.ini \
+            -i inventory/dev/hosts.ini \
             playbooks/nginx.yml
