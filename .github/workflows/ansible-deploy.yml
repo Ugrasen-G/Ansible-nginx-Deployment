@@ -1,6 +1,10 @@
 name: Deploy Nginx to Azure VM
 
 on:
+   push:
+     branches:
+       - main
+
   workflow_dispatch:
 
 permissions:
