@@ -41,24 +41,10 @@ jobs:
         id: vm
         run: |
 
-          # VM_IP=$(az vm show \
-          #   --show-details \
-          #   --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
-          #   --name "${{ secrets.AZURE_VM_NAME }}" \
-          #   --query publicIps \
-          #   --output tsv)
-
-            VM1_IP=$(az vm show \
+          VM_IP=$(az vm show \
             --show-details \
             --resource-group "kp2" \
             --name "frontend-vm1" \
-            --query publicIps \
-            --output tsv)
-
-            VM2_IP=$(az vm show \
-            --show-details \
-            --resource-group "kp2" \
-            --name "frontend-vm2" \
             --query publicIps \
             --output tsv)
 
@@ -66,7 +52,26 @@ jobs:
 
           echo "ip=$VM_IP" >> "$GITHUB_OUTPUT"
 
-      # 5. Create dynamic Ansible inventory
+
+    # 5. Get Azure VM Public IP
+      - name: Get VM IP
+        id: vm
+        run: |
+
+          VM_IP=$(az vm show \
+            --show-details \
+            --resource-group "kp2" \
+            --name "frontend-vm1" \
+            --query publicIps \
+            --output tsv)
+
+          echo "VM IP: $VM_IP"
+
+          echo "ip=$VM_IP" >> "$GITHUB_OUTPUT"
+
+
+
+      # 6. Create dynamic Ansible inventory
       - name: Create Inventory
         run: |
 
@@ -83,7 +88,7 @@ jobs:
 
           cat inventory/dev/hosts.ini
 
-      # 6. Configure SSH
+      # 7. Configure SSH
       - name: Configure SSH
         run: |
 
@@ -94,12 +99,12 @@ jobs:
 
           chmod 600 ~/.ssh/azure_vm_key
 
-      # 7. Test connection
+      # 8. Test connection
       - name: Run Ansible Ad-hoc Ping
         run: |
           ansible nginx -i inventory/dev/hosts.ini -m ping
 
-      # 8. Deploy Nginx
+      # 9. Deploy Nginx
       - name: Deploy Nginx
         run: |
           ansible-playbook \
