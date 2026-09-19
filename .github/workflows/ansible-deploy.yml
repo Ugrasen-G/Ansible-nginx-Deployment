@@ -70,25 +70,7 @@ jobs:
           echo "ip=$VM_IP" >> "$GITHUB_OUTPUT"
 
 
-
-      # 6. Create dynamic Ansible inventory
-      - name: Create Inventory
-        run: |
-
-          cat > inventory/dev/hosts.ini <<EOF
-
-          [nginx]
-          nginx-vm ansible_host=${{ steps.vm.outputs.ip }}
-
-          [nginx:vars]
-          ansible_user=${{ secrets.AZURE_VM_USER }}
-          ansible_ssh_private_key_file=~/.ssh/azure_vm_key
-
-          EOF
-
-          cat inventory/dev/hosts.ini
-
-      # 7. Configure SSH
+      # 6. Configure SSH
       - name: Configure SSH
         run: |
 
@@ -100,6 +82,30 @@ jobs:
           chmod 600 ~/.ssh/azure_vm_key
 
 
+      
+      # 7. Create dynamic Ansible inventory
+      - name: Create Inventory
+        env:
+          VM1_IP: ${{ steps.vm1.outputs.ip }}
+          VM2_IP: ${{ steps.vm2.outputs.ip }}
+          VM_USER: ${{ secrets.AZURE_VM_USER }}
+        run: |
+
+
+          cat > inventory/dev/hosts.ini <<EOF
+
+          [nginx]
+          frontend-vm1 ansible_host=${VM1_IP}
+          frontend-vm2 ansible_host=${VM2_IP}
+
+          [nginx:vars]
+          ansible_user=${{ secrets.AZURE_VM_USER }}
+          ansible_ssh_private_key_file=~/.ssh/azure_vm_key
+
+          EOF
+
+          cat inventory/dev/hosts.ini
+     # Debug Inventory
       - name: Debug inventory
         run: |
           echo "===== INVENTORY ====="
@@ -107,7 +113,7 @@ jobs:
 
           echo "===== ANSIBLE INVENTORY ====="
           ansible-inventory -i inventory/dev/hosts.ini --host nginx-vm
-   
+
       # 8. Test connection
       - name: Run Ansible Ad-hoc Ping
         run: |
