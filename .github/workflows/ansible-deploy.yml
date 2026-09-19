@@ -95,11 +95,9 @@ jobs:
           chmod 600 ~/.ssh/azure_vm_key
 
       # 7. Test connection
-      - name: Ansible Ping
+      - name: Run Ansible Ad-hoc Ping
         run: |
-          ansible nginx \
-            -i inventory/dev/hosts.ini \
-            -m ping
+          ansible nginx -i inventory/dev/hosts.ini -m ping
 
       # 8. Deploy Nginx
       - name: Deploy Nginx
