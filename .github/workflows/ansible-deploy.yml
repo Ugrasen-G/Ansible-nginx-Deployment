@@ -38,7 +38,7 @@ jobs:
 
       # 4. Get Azure VM Public IP
       - name: Get VM IP
-        id: vm
+        id: vm1
         run: |
 
           VM_IP=$(az vm show \
@@ -55,7 +55,7 @@ jobs:
 
     # 5. Get Azure VM Public IP
       - name: Get VM IP
-        id: vm
+        id: vm2
         run: |
 
           VM_IP=$(az vm show \
