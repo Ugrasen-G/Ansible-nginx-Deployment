@@ -61,7 +61,7 @@ jobs:
           VM_IP=$(az vm show \
             --show-details \
             --resource-group "kp2" \
-            --name "frontend-vm1" \
+            --name "frontend-vm2" \
             --query publicIps \
             --output tsv)
 
@@ -100,9 +100,9 @@ jobs:
           chmod 600 ~/.ssh/azure_vm_key
 
       # 8. Test connection
-      - name: Run Ansible Ad-hoc Ping
-        run: |
-          ansible nginx -i inventory/dev/hosts.ini -m ping
+      # - name: Run Ansible Ad-hoc Ping
+      #   run: |
+      #     ansible nginx -i inventory/dev/hosts.ini -m ping
 
       # 9. Deploy Nginx
       - name: Deploy Nginx
