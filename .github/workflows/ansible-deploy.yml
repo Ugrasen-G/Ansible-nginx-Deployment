@@ -99,10 +99,19 @@ jobs:
 
           chmod 600 ~/.ssh/azure_vm_key
 
+
+      - name: Debug inventory
+        run: |
+          echo "===== INVENTORY ====="
+          cat inventory/dev/hosts.ini
+
+          echo "===== ANSIBLE INVENTORY ====="
+          ansible-inventory -i inventory/dev/hosts.ini --host nginx-vm
+   
       # 8. Test connection
-      # - name: Run Ansible Ad-hoc Ping
-      #   run: |
-      #     ansible nginx -i inventory/dev/hosts.ini -m ping
+      - name: Run Ansible Ad-hoc Ping
+        run: |
+          ansible nginx -i inventory/dev/hosts.ini -m ping
 
       # 9. Deploy Nginx
       - name: Deploy Nginx
