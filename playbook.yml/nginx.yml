@@ -1,5 +1,6 @@
 # main playbook
 
+
 - name: Deploy Nginx
   run: |
     ansible-playbook nginx.yml

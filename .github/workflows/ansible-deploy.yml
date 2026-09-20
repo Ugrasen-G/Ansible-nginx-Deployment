@@ -133,8 +133,20 @@ jobs:
         run: |
            ANSIBLE_HOST_KEY_CHECKING=False ansible nginx -i inventory/dev/hosts.ini -m ping
 
+    # 9. Find Ansible files
+      - name: Find Ansible files
+        run: |
+          echo "Current directory:"
+          pwd
 
-    # 9. Deploy Nginx
+          echo ""
+          echo "All files:"
+          find . -type f | sort
+
+          echo ""
+          echo "Searching for nginx.yml:"
+          find . -type f -name "nginx.yml" -print
+    # 10. Deploy Nginx
       - name: Deploy Nginx
         run: |
           ansible-playbook \
