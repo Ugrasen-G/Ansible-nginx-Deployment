@@ -138,5 +138,5 @@ jobs:
       - name: Deploy Nginx
         run: |
           ansible-playbook \
-            --i inventory/dev/hosts.ini \
+            -i inventory/dev/hosts.ini \
             playbook/nginx.yml
