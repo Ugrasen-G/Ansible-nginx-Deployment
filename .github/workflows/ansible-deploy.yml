@@ -34,8 +34,16 @@ jobs:
       # 3 Get VM password from Azure Key Vault
       - name: Get VM Password from Key Vault
         uses: azure/cli@v2
+        env:
+          GH_VM_PASSWORD: ${{ secrets.AZURE_VM_PASSWORD }}
         with:
           inlineScript: |
+           # Check if password exists in GitHub Secrets
+            if [ -n "$GH_VM_PASSWORD" ]; then
+              echo "Password found in GitHub Secrets."
+              VM_PASSWORD="$GH_VM_PASSWORD"
+            else
+              echo "Password not found in GitHub Secrets. Fetching from Key Vault..."
             VM_PASSWORD=$(az keyvault secret show \
               --vault-name "kp2026" \
               --name "vm-password" \
