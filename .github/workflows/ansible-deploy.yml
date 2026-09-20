@@ -71,18 +71,40 @@ jobs:
 
 
       # 6. Configure SSH
-      - name: Configure SSH
+      # - name: Configure SSH
+      #   run: |
+
+      #     mkdir -p ~/.ssh
+
+      #     echo "${{ secrets.AZURE_VM_SSH_KEY }}" \
+      #       > ~/.ssh/azure_vm_key
+
+      #     chmod 600 ~/.ssh/azure_vm_key
+
+
+      # 6. Create dynamic Ansible inventory
+      - name: Create Inventory
+        env:
+          VM1_IP: ${{ steps.vm1.outputs.ip }}
+          VM2_IP: ${{ steps.vm2.outputs.ip }}
+          VM_USER: ${{ secrets.AZURE_VM_USER }}
+          VM_PASSWORD: ${{ secrets.AZURE_VM_PASSWORD }}
         run: |
 
-          mkdir -p ~/.ssh
+          cat > inventory/dev/hosts.ini <<EOF
+          [nginx]
+          frontend-vm1 ansible_host=${VM1_IP}
+          frontend-vm2 ansible_host=${VM2_IP}
 
-          echo "${{ secrets.AZURE_VM_SSH_KEY }}" \
-            > ~/.ssh/azure_vm_key
+          [nginx:vars]
+          ansible_user=${VM_USER}
+          ansible_password=${VM_PASSWORD}
+          ansible_connection=ssh
+          ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+          EOF
 
-          chmod 600 ~/.ssh/azure_vm_key
+          cat inventory/dev/hosts.ini
 
-
-      
       # 7. Create dynamic Ansible inventory
       - name: Create Inventory
         env:
