@@ -30,13 +30,31 @@ jobs:
            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # 3. Install Ansible temporarily
+
+      # 3 Get VM password from Azure Key Vault
+      - name: Get VM Password from Key Vault
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            VM_PASSWORD=$(az keyvault secret show \
+              --vault-name "kp2026" \
+              --name "vm-password" \
+              --query value \
+              --output tsv)
+
+            echo "::add-mask::$VM_PASSWORD"
+            echo "VM_PASSWORD=$VM_PASSWORD" >> "$GITHUB_ENV"
+
+      # 4. Install Ansible temporarily
       - name: Install Ansible
         run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
           python -m pip install --upgrade pip
           pip install ansible
 
-      # 4. Get Azure VM Public IP
+
+      # 5. Get Azure VM Public IP
       - name: Get VM IP
         id: vm1
         run: |
@@ -53,7 +71,7 @@ jobs:
           echo "ip=$VM_IP" >> "$GITHUB_OUTPUT"
 
 
-    # 5. Get Azure VM Public IP
+    # 6. Get Azure VM Public IP
       - name: Get VM IP
         id: vm2
         run: |
@@ -70,19 +88,9 @@ jobs:
           echo "ip=$VM_IP" >> "$GITHUB_OUTPUT"
 
 
-      # 6. Configure SSH
-      # - name: Configure SSH
-      #   run: |
+      
 
-      #     mkdir -p ~/.ssh
-
-      #     echo "${{ secrets.AZURE_VM_SSH_KEY }}" \
-      #       > ~/.ssh/azure_vm_key
-
-      #     chmod 600 ~/.ssh/azure_vm_key
-
-
-      # 6. Create dynamic Ansible inventory
+    # 7. Create dynamic Ansible inventory
       - name: Create Inventory
         env:
           VM1_IP: ${{ steps.vm1.outputs.ip }}
@@ -105,44 +113,13 @@ jobs:
 
           cat inventory/dev/hosts.ini
 
-      # 7. Create dynamic Ansible inventory
-      - name: Create Inventory
-        env:
-          VM1_IP: ${{ steps.vm1.outputs.ip }}
-          VM2_IP: ${{ steps.vm2.outputs.ip }}
-          VM_USER: ${{ secrets.AZURE_VM_USER }}
-        run: |
-
-
-          cat > inventory/dev/hosts.ini <<EOF
-
-          [nginx]
-          frontend-vm1 ansible_host=${VM1_IP}
-          frontend-vm2 ansible_host=${VM2_IP}
-
-          [nginx:vars]
-          ansible_user=${{ secrets.AZURE_VM_USER }}
-          
-
-          EOF
-
-          cat inventory/dev/hosts.ini
-     # Debug Inventory
-      # - name: Debug inventory
-      #   run: |
-      #     echo "===== INVENTORY ====="
-      #     cat inventory/dev/hosts.ini
-
-      #     echo "===== ANSIBLE INVENTORY ====="
-      #     ansible-inventory -i inventory/dev/hosts.ini --host nginx-vm
-
-      # 8. Test connection
+    # 8. Ansible Ad-hoc Ping
       - name: Run Ansible Ad-hoc Ping
         run: |
            ANSIBLE_HOST_KEY_CHECKING=False ansible nginx -i inventory/dev/hosts.ini -m ping
 
 
-      # 9. Deploy Nginx
+    # 9. Deploy Nginx
       - name: Deploy Nginx
         run: |
           ansible-playbook \
