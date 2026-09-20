@@ -1,4 +1,4 @@
-name: Deploy Nginx to Azure VM
+# name: Deploy Nginx to Azure VM
 
 on:
   push:
