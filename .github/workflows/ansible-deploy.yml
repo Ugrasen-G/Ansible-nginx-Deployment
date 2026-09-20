@@ -51,7 +51,14 @@ jobs:
                 --query value \
                 --output tsv)
 
-              
+              if [ -z "$VM_PASSWORD" ]; then
+                echo "ERROR: Failed to retrieve password from Key Vault."
+                exit 1
+              fi
+            fi
+
+              echo "::add-mask::$VM_PASSWORD"
+              echo "VM_PASSWORD=$VM_PASSWORD" >> "$GITHUB_ENV"
 
       # 4. Install Ansible temporarily
       - name: Install Ansible
@@ -106,7 +113,7 @@ jobs:
           VM_USER: ${{ secrets.AZURE_VM_USER }}
           VM_PASSWORD: ${{ secrets.AZURE_VM_PASSWORD }}
         run: |
-
+          mkdir -p inventory/dev
           cat > inventory/dev/hosts.ini <<EOF
           [nginx]
           frontend-vm1 ansible_host=${VM1_IP}
@@ -119,7 +126,7 @@ jobs:
           ansible_ssh_common_args='-o StrictHostKeyChecking=no'
           EOF
 
-          cat inventory/dev/hosts.ini
+          echo "Ansible inventory created."
 
     # 8. Ansible Ad-hoc Ping
       - name: Run Ansible Ad-hoc Ping
