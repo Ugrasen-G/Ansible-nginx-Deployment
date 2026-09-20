@@ -139,7 +139,8 @@ jobs:
       # 8. Test connection
       - name: Run Ansible Ad-hoc Ping
         run: |
-          ansible nginx -i inventory/dev/hosts.ini -m ping
+           ANSIBLE_HOST_KEY_CHECKING=False ansible nginx -i inventory/dev/hosts.ini -m ping
+
 
       # 9. Deploy Nginx
       - name: Deploy Nginx
