@@ -38,20 +38,20 @@ jobs:
           GH_VM_PASSWORD: ${{ secrets.AZURE_VM_PASSWORD }}
         with:
           inlineScript: |
-           # Check if password exists in GitHub Secrets
+            # Check if password exists in GitHub Secrets
             if [ -n "$GH_VM_PASSWORD" ]; then
               echo "Password found in GitHub Secrets."
               VM_PASSWORD="$GH_VM_PASSWORD"
             else
               echo "Password not found in GitHub Secrets. Fetching from Key Vault..."
-            VM_PASSWORD=$(az keyvault secret show \
-              --vault-name "kp2026" \
-              --name "vm-password" \
-              --query value \
-              --output tsv)
 
-            echo "::add-mask::$VM_PASSWORD"
-            echo "VM_PASSWORD=$VM_PASSWORD" >> "$GITHUB_ENV"
+              VM_PASSWORD=$(az keyvault secret show \
+                --vault-name "kp2026" \
+                --name "vm-password" \
+                --query value \
+                --output tsv)
+
+              
 
       # 4. Install Ansible temporarily
       - name: Install Ansible
