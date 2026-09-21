@@ -155,8 +155,8 @@ jobs:
             playbook/nginx.yml
 
     # 11. Deploy Nginx
-      - name: Deploy handlers
-        run: |
-          ansible-playbook \
-            -i inventory/dev/hosts.ini \
-            roles/nginx/handlers/main.yml
+      # - name: Deploy handlers
+      #   run: |
+      #     ansible-playbook \
+      #       -i inventory/dev/hosts.ini \
+      #       roles/nginx/handlers/main.yml
