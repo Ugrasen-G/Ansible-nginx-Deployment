@@ -1,476 +1,440 @@
-<!-- # Ansible-nginx-Deployment
- 🚀A collection of Ansible playbooks and roles for infrastructure automation, server configuration, and application deployment.
+🚀 Ansible Deployment on Azure VM using GitHub Actions
+📌 Overview
 
-Bilkul. Passwordless authentication ke liye SSH key-based authentication use karte hain. Password GitHub Secrets mein store karne ki zarurat nahi hogi.
+This project demonstrates a secure and automated DevOps deployment workflow using Ansible, Azure Virtual Machine, GitHub Actions, and Azure Key Vault.
 
-Aapki repo:
+The application/server configuration is managed using Ansible, while GitHub Actions automates the deployment process. Sensitive credentials and configuration values are securely managed through Azure Key Vault, avoiding hardcoded secrets in the source code.
 
-Ugrasen-G/Ansible-nginx-Deployment
+🏗️ Architecture
+                  ┌──────────────────────┐
+                  │   Developer / Git    │
+                  │      Repository      │
+                  └──────────┬───────────┘
+                             │
+                             │ Push / Pull Request
+                             ▼
+                  ┌──────────────────────┐
+                  │    GitHub Actions    │
+                  │      CI/CD Pipeline  │
+                  └──────────┬───────────┘
+                             │
+                             │ Authenticate
+                             ▼
+                  ┌──────────────────────┐
+                  │    Azure Key Vault   │
+                  │                      │
+                  │  Secrets / Credentials│
+                  └──────────┬───────────┘
+                             │
+                             │ Secure Secret Retrieval
+                             ▼
+                  ┌──────────────────────┐
+                  │     Azure VM         │
+                  │                      │
+                  │  Ansible Controller  │
+                  │       / Target       │
+                  └──────────┬───────────┘
+                             │
+                             │ Ansible Playbook
+                             ▼
+                  ┌──────────────────────┐
+                  │      Deployment      │
+                  │   Server Config /    │
+                  │   Application Setup  │
+                  └──────────────────────┘
 
-ke liye main ye production-style structure rakhunga.
+🛠️ Technologies Used
+Technology	Purpose
+Azure VM	Hosting the target server
+Ansible	Configuration management and automation
+GitHub Actions	CI/CD automation
+Azure Key Vault	Secure secrets management
+GitHub	Source code and pipeline management
+YAML	Ansible playbooks and GitHub Actions workflow
+🔄 Deployment Workflow
 
-1. Repository structure
-Ansible-nginx-Deployment/
-│
+The deployment follows this workflow:
+
+Developer pushes changes to the GitHub repository.
+
+GitHub Actions workflow is triggered.
+
+The workflow authenticates with Azure.
+
+Required secrets are securely retrieved from Azure Key Vault.
+
+GitHub Actions prepares the Ansible environment.
+
+Ansible connects to the Azure VM.
+
+The Ansible playbook executes the required configuration/deployment tasks.
+
+The application/server configuration is updated automatically.
+
+Deployment status is reported by GitHub Actions.
+
+Workflow
+Code Push
+    ↓
+GitHub Repository
+    ↓
+GitHub Actions
+    ↓
+Azure Authentication
+    ↓
+Azure Key Vault
+    ↓
+Retrieve Secrets
+    ↓
+Ansible
+    ↓
+Azure VM
+    ↓
+Application / Server Deployment
+
+📁 Project Structure
+.
 ├── .github/
 │   └── workflows/
-│       └── deploy-nginx.yml
+│       └── deploy.yml
 │
 ├── ansible/
-│   ├── inventory/
-│   │   └── hosts.ini
-│   │
-│   ├── playbooks/
-│   │   └── nginx.yml
-│   │
+│   ├── inventory
+│   ├── playbook.yml
 │   ├── roles/
-│   │   └── nginx/
+│   │   └── application/
 │   │       ├── tasks/
 │   │       │   └── main.yml
-│   │       ├── handlers/
-│   │       │   └── main.yml
 │   │       ├── templates/
-│   │       │   └── nginx.conf.j2
-│   │       └── defaults/
+│   │       └── handlers/
 │   │           └── main.yml
 │   │
-│   └── group_vars/
-│       └── nginx_servers.yml
+│   └── ansible.cfg
 │
+├── scripts/
+│   └── deployment.sh
+│
+├── requirements.txt
 └── README.md
-2. Azure VM setup
-Maan lete hain aapke paas 3 Ubuntu VMs hain:
 
-VM1 → 10.0.1.4
-VM2 → 10.0.1.5
-VM3 → 10.0.1.6
-Azure VM create karte waqt SSH public key use karein.
 
-Aapke local machine par key generate:
+Update the structure according to your actual project files.
 
-ssh-keygen -t ed25519 -C "ansible-nginx-deployment"
-Isse generally ye files milengi:
+🔐 Secrets Management
 
-~/.ssh/ansible-nginx-deployment
-~/.ssh/ansible-nginx-deployment.pub
-.pub = public key, Azure VMs par jayegi.
+Security is an important part of this deployment architecture.
 
-बिना .pub wali file = private key, ise GitHub Secret mein rakhenge.
+Sensitive information such as:
 
-Azure VM ke azureuser account ke ~/.ssh/authorized_keys mein public key honi chahiye.
+VM credentials
 
-Test:
+SSH private keys
 
-ssh -i ~/.ssh/ansible-nginx-deployment azureuser@VM_IP
-Agar password nahi poochta aur login ho jata hai, SSH passwordless authentication ready hai.
+Application secrets
 
-3. Ansible inventory
-ansible/inventory/hosts.ini
+API credentials
 
-[nginx_servers]
-web01 ansible_host=10.0.1.4
-web02 ansible_host=10.0.1.5
-web03 ansible_host=10.0.1.6
+Database credentials
 
-[nginx_servers:vars]
-ansible_user=azureuser
-ansible_python_interpreter=/usr/bin/python3
-Agar GitHub Actions runner Azure VNet ke andar hai, to private IPs use kar sakte hain.
+Azure authentication credentials
 
-Agar GitHub-hosted runner use kar rahe hain aur VMs ke public IPs hain:
+should not be hardcoded in the repository.
 
-[nginx_servers]
-web01 ansible_host=20.xx.xx.10
-web02 ansible_host=20.xx.xx.11
-web03 ansible_host=20.xx.xx.12
+These secrets are securely stored in Azure Key Vault and accessed by the CI/CD workflow when required.
 
-[nginx_servers:vars]
-ansible_user=azureuser
-ansible_python_interpreter=/usr/bin/python3
-4. Ansible playbook
-ansible/playbooks/nginx.yml
+Secret Management Flow
+Azure Key Vault
+       │
+       │ Secure Authentication
+       ▼
+GitHub Actions
+       │
+       │ Runtime Secret
+       ▼
+Ansible
+       │
+       ▼
+Azure VM
 
----
-- name: Deploy Nginx on Azure VMs
-  hosts: nginx_servers
-  become: true
 
-  roles:
-    - nginx
-5. Nginx task
-ansible/roles/nginx/tasks/main.yml
+This approach helps keep sensitive information separate from application and infrastructure code.
 
----
-- name: Update apt cache
-  ansible.builtin.apt:
-    update_cache: true
-    cache_valid_time: 3600
+⚙️ GitHub Actions CI/CD
 
-- name: Install Nginx
-  ansible.builtin.apt:
-    name: nginx
-    state: present
+The GitHub Actions workflow is responsible for automating the deployment.
 
-- name: Deploy Nginx configuration
-  ansible.builtin.template:
-    src: nginx.conf.j2
-    dest: /etc/nginx/nginx.conf
-    owner: root
-    group: root
-    mode: "0644"
-    validate: "nginx -t"
-  notify: Restart Nginx
+A typical workflow performs the following steps:
 
-- name: Enable and start Nginx
-  ansible.builtin.service:
-    name: nginx
-    state: started
-    enabled: true
-6. Handler
-ansible/roles/nginx/handlers/main.yml
-
----
-- name: Restart Nginx
-  ansible.builtin.service:
-    name: nginx
-    state: restarted
-7. Variables
-ansible/group_vars/nginx_servers.yml
-
----
-nginx_port: 80
-nginx_server_name: "_"
-8. Nginx template
-ansible/roles/nginx/templates/nginx.conf.j2
-
-user www-data;
-
-worker_processes auto;
-
-pid /run/nginx.pid;
-
-events {
-    worker_connections 1024;
-}
-
-http {
-
-    include /etc/nginx/mime.types;
-
-    default_type application/octet-stream;
-
-    sendfile on;
-
-    keepalive_timeout 65;
-
-    server {
-
-        listen {{ nginx_port }};
-
-        server_name {{ nginx_server_name }};
-
-        location / {
-            return 200 "Nginx deployed successfully using Ansible\n";
-            add_header Content-Type text/plain;
-        }
-    }
-}
-9. GitHub Actions
-Sabse important file:
-
-.github/workflows/deploy-nginx.yml
-
-name: Deploy Nginx to Azure VMs
+name: Ansible Deployment
 
 on:
   push:
     branches:
       - main
 
-  workflow_dispatch:
-
 jobs:
-
   deploy:
-
-    name: Ansible Nginx Deployment
-
     runs-on: ubuntu-latest
 
     steps:
-
-      # --------------------------------
-      # Checkout Repository
-      # --------------------------------
-
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # --------------------------------
-      # Install Ansible
-      # --------------------------------
+      - name: Retrieve Secrets
+        # Retrieve required secrets from Azure Key Vault
 
       - name: Install Ansible
         run: |
-          python3 -m pip install --upgrade pip
-          pip install ansible
+          sudo apt-get update
+          sudo apt-get install -y ansible
 
-
-      # --------------------------------
-      # Setup SSH
-      # --------------------------------
-
-      - name: Setup SSH private key
+      - name: Run Ansible Playbook
         run: |
-
-          mkdir -p ~/.ssh
-
-          echo "${{ secrets.AZURE_SSH_PRIVATE_KEY }}" > ~/.ssh/ansible-nginx-deployment
-
-          chmod 600 ~/.ssh/ansible-nginx-deployment
-
-
-      # --------------------------------
-      # Start SSH Agent
-      # --------------------------------
-
-      - name: Start SSH Agent
-        run: |
-
-          eval "$(ssh-agent -s)"
-
-          ssh-add ~/.ssh/ansible-nginx-deployment
-
-
-      # --------------------------------
-      # Add SSH known hosts
-      # --------------------------------
-
-      - name: Add Azure VMs to known_hosts
-        run: |
-
-          ssh-keyscan -H ${{ secrets.VM1_IP }} >> ~/.ssh/known_hosts
-
-          ssh-keyscan -H ${{ secrets.VM2_IP }} >> ~/.ssh/known_hosts
-
-          ssh-keyscan -H ${{ secrets.VM3_IP }} >> ~/.ssh/known_hosts
-
-
-      # --------------------------------
-      # Test Ansible connectivity
-      # --------------------------------
-
-      - name: Ansible Ping
-        run: |
-
-          ansible nginx_servers \
-            -i ansible/inventory/hosts.ini \
-            -m ping \
-            --private-key ~/.ssh/ansible-nginx-deployment
-
-
-      # --------------------------------
-      # Deploy Nginx
-      # --------------------------------
-
-      - name: Deploy Nginx
-        run: |
-
           ansible-playbook \
-            -i ansible/inventory/hosts.ini \
-            ansible/playbooks/nginx.yml \
-            --private-key ~/.ssh/ansible-nginx-deployment
-Lekin ek improvement
-hosts.ini mein IPs hard-code karne ke bajay GitHub Secrets se inventory generate karna better hai.
-
-Isliye workflow ko is version mein use karna recommended hai:
-
-name: Deploy Nginx to Azure VMs
-
-on:
-  push:
-    branches:
-      - main
-
-  workflow_dispatch:
-
-jobs:
-
-  deploy:
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
+            -i ansible/inventory \
+            ansible/playbook.yml
 
 
-      - name: Install Ansible
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install ansible
+Replace the example configuration with the actual authentication and Key Vault implementation used in the project.
 
+☁️ Azure VM
 
-      - name: Setup SSH key
-        run: |
+The Azure Virtual Machine acts as the deployment target.
 
-          mkdir -p ~/.ssh
+Ansible is used to automate tasks such as:
 
-          printf '%s\n' "${{ secrets.AZURE_SSH_PRIVATE_KEY }}" \
-            > ~/.ssh/ansible-nginx-deployment
+Installing required packages
 
-          chmod 600 ~/.ssh/ansible-nginx-deployment
+Managing services
 
+Copying configuration files
 
-      - name: Generate Ansible inventory
-        run: |
+Deploying application files
 
-          cat > ansible/inventory/hosts.ini <<EOF
+Updating application versions
 
-          [nginx_servers]
+Restarting services
 
-          web01 ansible_host=${{ secrets.VM1_IP }}
+Applying server configuration
 
-          web02 ansible_host=${{ secrets.VM2_IP }}
-
-          web03 ansible_host=${{ secrets.VM3_IP }}
-
-
-          [nginx_servers:vars]
-
-          ansible_user=${{ secrets.ANSIBLE_USER }}
-
-          ansible_python_interpreter=/usr/bin/python3
-
-          EOF
-
-
-      - name: Add hosts to known_hosts
-        run: |
-
-          ssh-keyscan -H "${{ secrets.VM1_IP }}" \
-            >> ~/.ssh/known_hosts
-
-          ssh-keyscan -H "${{ secrets.VM2_IP }}" \
-            >> ~/.ssh/known_hosts
-
-          ssh-keyscan -H "${{ secrets.VM3_IP }}" \
-            >> ~/.ssh/known_hosts
-
-
-      - name: Test connectivity
-        run: |
-
-          ansible nginx_servers \
-            -i ansible/inventory/hosts.ini \
-            -m ping \
-            --private-key ~/.ssh/ansible-nginx-deployment
-
-
-      - name: Deploy Nginx
-        run: |
-
-          ansible-playbook \
-            -i ansible/inventory/hosts.ini \
-            ansible/playbooks/nginx.yml \
-            --private-key ~/.ssh/ansible-nginx-deployment
-10. GitHub Secrets
-Repository mein:
-
-Settings → Secrets and variables → Actions → New repository secret
-
-Create karein:
-
-AZURE_SSH_PRIVATE_KEY
-ANSIBLE_USER
-VM1_IP
-VM2_IP
-VM3_IP
 Example:
 
-ANSIBLE_USER = azureuser
+ansible-playbook \
+  -i inventory \
+  playbook.yml
 
-VM1_IP = 20.xx.xx.10
-VM2_IP = 20.xx.xx.11
-VM3_IP = 20.xx.xx.12
-AZURE_SSH_PRIVATE_KEY:
+🤖 Ansible
 
------BEGIN OPENSSH PRIVATE KEY-----
-...
-...
------END OPENSSH PRIVATE KEY-----
-Private key ko kabhi GitHub repo ke andar file ke रूप में commit nahi karna hai.
+Ansible provides configuration management and deployment automation.
 
-11. Passwordless authentication ka flow
-                    GitHub
-                       │
-                       │ git push
-                       ▼
-              GitHub Actions Runner
-                       │
-                       │ SSH Private Key
-                       ▼
-                ┌───────────────┐
-                │ Azure Network │
-                └───────┬───────┘
-                        │
-             ┌──────────┼──────────┐
-             │          │          │
-             ▼          ▼          ▼
-           VM-01      VM-02      VM-03
-             │          │          │
-          Nginx       Nginx      Nginx
-Authentication:
+A basic playbook structure:
 
-GitHub Secret
-    │
-    │ Private SSH Key
-    ▼
-GitHub Runner
-    │
-    │ SSH
-    ▼
-Azure VM
-    │
-    │ Public Key verification
-    ▼
-Passwordless Login
-12. Ek important point: sudo password
-SSH login passwordless hone ke baad bhi Ansible mein humne:
+---
+- name: Deploy Application
+  hosts: azure_vm
+  become: true
 
-become: true
-use kiya hai.
+  tasks:
 
-Iska matlab Nginx install karne ke liye sudo chahiye. Azure Ubuntu VMs mein azureuser ko normally sudo access milta hai, lekin agar sudo password maangta hai to become ke liye password issue aa sakta hai.
+    - name: Update package cache
+      apt:
+        update_cache: yes
 
-Production setup mein azureuser ko passwordless sudo dena possible hai:
+    - name: Install required packages
+      apt:
+        name:
+          - nginx
+        state: present
 
-azureuser ALL=(ALL) NOPASSWD: ALL
-Lekin ise blindly enable karne ke bajay, ideally sirf required commands/permissions tak restrict karna safer hai.
+    - name: Deploy application
+      # Application deployment task
 
-Recommended Azure architecture
-Agar aapki VMs private IPs par hain, to:
+    - name: Restart application service
+      service:
+        name: nginx
+        state: restarted
 
-GitHub
-   │
-   ▼
-GitHub Actions
-   │
-   ▼
-Self-hosted Runner
-   │
-   │ Azure VNet
-   ├──────────────┐
-   ▼              ▼
- Azure VM 1     Azure VM 2
-   │              │
- Nginx          Nginx
-Agar VMs public IP par SSH expose karni hain, to GitHub-hosted runner bhi
 
-ChatGPT said:
-Unable to connect
-•
+The actual tasks can be customized according to the application and server requirements.
 
-Retry -->
+🔑 Azure Key Vault Integration
+
+Azure Key Vault is used as the centralized secret-management layer.
+
+Instead of storing credentials directly inside:
+
+ansible/playbook.yml
+
+
+or:
+
+.github/workflows/deploy.yml
+
+
+the sensitive values are stored securely in Azure Key Vault and retrieved during the deployment process.
+
+Benefits
+
+🔐 Centralized secret management
+
+🚫 No hardcoded credentials
+
+🔄 Easier secret rotation
+
+🛡️ Reduced risk of credential exposure
+
+📋 Better separation between code and secrets
+
+🔒 Security Practices
+
+This project follows several security-focused DevOps practices:
+
+Never commit passwords or private keys to Git.
+
+Store sensitive values in Azure Key Vault.
+
+Use GitHub Secrets for required CI/CD authentication values.
+
+Apply least-privilege access to Azure resources.
+
+Avoid printing secrets in CI/CD logs.
+
+Keep Ansible variables separate from sensitive credentials.
+
+Use SSH keys instead of passwords where possible.
+
+Rotate credentials periodically.
+
+Restrict Azure VM network access using appropriate firewall/security rules.
+
+🚀 How to Run
+1. Clone the Repository
+git clone <repository-url>
+cd <repository-name>
+
+2. Configure Azure Resources
+
+Create/configure:
+
+Azure Resource Group
+
+Azure Virtual Machine
+
+Azure Key Vault
+
+Required identities/permissions
+
+3. Configure Secrets
+
+Store required sensitive values in Azure Key Vault.
+
+Example:
+
+VM_USERNAME
+VM_SSH_PRIVATE_KEY
+APPLICATION_SECRET
+
+
+Use the actual secret names configured in your project.
+
+4. Configure GitHub Actions
+
+Add the required Azure authentication/configuration values under:
+
+GitHub Repository
+    → Settings
+    → Secrets and variables
+    → Actions
+
+5. Configure Ansible Inventory
+
+Example:
+
+[azure_vm]
+azure-server ansible_host=<VM_IP>
+
+[azure_vm:vars]
+ansible_user=<VM_USER>
+
+
+Do not commit private credentials to the repository.
+
+6. Run Deployment
+
+Push changes to the configured branch:
+
+git add .
+git commit -m "Deploy application"
+git push origin main
+
+
+GitHub Actions will automatically trigger the deployment workflow.
+
+📊 DevOps Benefits
+
+This architecture provides:
+
+Automation — Deployment is executed automatically through CI/CD.
+
+Consistency — Ansible ensures repeatable server configuration.
+
+Security — Secrets are managed through Azure Key Vault.
+
+Scalability — The same Ansible approach can be extended to multiple VMs.
+
+Version Control — Infrastructure and deployment configuration are maintained in Git.
+
+Reduced Manual Work — Server configuration and deployment tasks are automated.
+
+🧪 Deployment Validation
+
+After deployment, the pipeline can perform validation checks such as:
+
+ansible -i inventory azure_vm -m ping
+
+
+Application/service health checks can also be added to the GitHub Actions workflow.
+
+Example:
+
+curl -f http://<SERVER-IP>/health
+
+
+If the validation fails, the GitHub Actions job can mark the deployment as failed.
+
+🔮 Future Improvements
+
+Possible enhancements include:
+
+Infrastructure provisioning using Terraform
+
+Azure Managed Identity instead of long-lived credentials
+
+Deployment to multiple Azure VMs
+
+Ansible Vault for additional secret protection
+
+Automated rollback strategy
+
+Application health checks
+
+Blue-Green deployment
+
+Monitoring with Azure Monitor
+
+Containerization using Docker
+
+Kubernetes deployment using AKS
+
+🎯 Project Objective
+
+The main objective of this project is to demonstrate how Ansible and GitHub Actions can be integrated with Azure infrastructure to create a secure, automated, and repeatable deployment pipeline, while using Azure Key Vault for centralized secrets management.
+
+👨‍💻 Author - Ugrasen Gangwar
+
+DevOps Engineer | Azure | Ansible | GitHub Actions | CI/CD
