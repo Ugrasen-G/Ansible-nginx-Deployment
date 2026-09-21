@@ -148,8 +148,15 @@ jobs:
       #     find . -type f -name "nginx.yml" -print
 
     # 10. Deploy Nginx
-      # - name: Deploy Nginx
-      #   run: |
-      #     ansible-playbook \
-      #       -i inventory/dev/hosts.ini \
-      #       playbook/nginx.yml
+      - name: Deploy Nginx
+        run: |
+          ansible-playbook \
+            -i inventory/dev/hosts.ini \
+            playbook/nginx.yml
+
+    # 11. Deploy Nginx
+      - name: Deploy handlers
+        run: |
+          ansible-playbook \
+            -i inventory/dev/hosts.ini \
+            roles/nginx/handlers/main.yml
