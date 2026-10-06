@@ -1,4 +1,7 @@
+# name: Deploy and Restart Nginx to Azure VM
+
 ---
+# 1 Deploy nginx
 - name: Deploy Nginx
   hosts: nginx
   become: true
@@ -14,12 +17,13 @@
         name: nginx
         state: present
 
+    # Run nginx
     - name: Ensure Nginx is running
       ansible.builtin.service:
         name: nginx
         state: started
         enabled: true
-        
+
     # Restart nginx
     - name: Restart Nginx
       ansible.builtin.service:
